@@ -1,0 +1,1437 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>강안교육 · 교재 자동 편집</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --green: #006241;
+  --green-dark: #004F32;
+  --green-light: #F4F9F6;
+  --green-soft: #5A8A75;
+  --ink: #1A1A1A;
+  --ink-soft: #3D3D3D;
+  --gray-1: #888;
+  --gray-2: #BDBDBD;
+  --gray-3: #D5D5D5;
+  --gray-4: #E5E5E5;
+  --gray-5: #F0F0F0;
+  --bg: #F7F7F5;
+  --white: #fff;
+  --warning: #B45309;
+  --warning-bg: #FEF3C7;
+  --danger: #B91C1C;
+}
+body {
+  font-family: -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", "Pretendard", sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  min-height: 100vh;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* ===== 상단 네비게이션 ===== */
+.topbar {
+  background: var(--white);
+  border-bottom: 1px solid var(--gray-4);
+  padding: 0 24px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.topbar.hidden { display: none; }
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-weight: 700;
+  font-size: 15px;
+  letter-spacing: -0.3px;
+}
+.brand-badge {
+  background: var(--green);
+  color: var(--white);
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+.user-avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--green);
+  color: var(--white);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 12px;
+}
+.btn-logout {
+  background: none;
+  border: none;
+  color: var(--gray-1);
+  font-size: 12px;
+  cursor: pointer;
+  padding: 4px 8px;
+  font-family: inherit;
+}
+.btn-logout:hover { color: var(--ink); }
+
+/* ===== 콘텐츠 영역 ===== */
+.page { display: none; }
+.page.active { display: block; }
+.container {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 32px 24px 60px;
+}
+
+/* ===== 화면 1: 로그인 ===== */
+#page-login .container {
+  max-width: 400px;
+  padding: 80px 24px;
+}
+.login-logo {
+  text-align: center;
+  margin-bottom: 36px;
+}
+.login-logo .badge {
+  display: inline-block;
+  background: var(--green);
+  color: var(--white);
+  padding: 8px 14px;
+  border-radius: 6px;
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 1.5px;
+  margin-bottom: 16px;
+}
+.login-logo h1 {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.4px;
+  margin-bottom: 6px;
+}
+.login-logo p {
+  font-size: 13px;
+  color: var(--gray-1);
+}
+.login-card {
+  background: var(--white);
+  border-radius: 10px;
+  padding: 32px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+.login-card .field {
+  margin-bottom: 14px;
+}
+.login-card label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-soft);
+  margin-bottom: 6px;
+}
+.login-card input {
+  width: 100%;
+  padding: 11px 14px;
+  font-size: 14px;
+  border: 1px solid var(--gray-3);
+  border-radius: 6px;
+  font-family: inherit;
+  background: var(--white);
+}
+.login-card input:focus {
+  outline: none;
+  border-color: var(--green);
+}
+.btn-primary {
+  background: var(--green);
+  color: var(--white);
+  border: none;
+  padding: 12px 24px;
+  font-size: 14px;
+  font-weight: 700;
+  border-radius: 6px;
+  cursor: pointer;
+  font-family: inherit;
+  width: 100%;
+  letter-spacing: 0.3px;
+}
+.btn-primary:hover { background: var(--green-dark); }
+.btn-primary:disabled { background: var(--gray-2); cursor: not-allowed; }
+.login-footer {
+  text-align: center;
+  margin-top: 16px;
+  font-size: 11px;
+  color: var(--gray-1);
+}
+
+/* ===== 화면 2: 메인 (대시보드) ===== */
+.greeting {
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  margin-bottom: 6px;
+}
+.greeting-sub {
+  color: var(--gray-1);
+  font-size: 13px;
+  margin-bottom: 28px;
+}
+.action-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+.action-main {
+  background: linear-gradient(135deg, var(--green) 0%, var(--green-dark) 100%);
+  color: var(--white);
+  border-radius: 10px;
+  padding: 28px;
+  cursor: pointer;
+  transition: transform 0.15s;
+}
+.action-main:hover { transform: translateY(-1px); }
+.action-main .label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  opacity: 0.85;
+  margin-bottom: 8px;
+}
+.action-main h2 {
+  font-size: 22px;
+  font-weight: 700;
+  margin-bottom: 4px;
+  letter-spacing: -0.3px;
+}
+.action-main p {
+  font-size: 13px;
+  opacity: 0.85;
+  margin-bottom: 16px;
+}
+.action-main .arrow {
+  font-size: 18px;
+  font-weight: 400;
+}
+.action-side {
+  background: var(--white);
+  border: 1px solid var(--gray-4);
+  border-radius: 10px;
+  padding: 20px;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+.action-side:hover { border-color: var(--green); }
+.action-side .label {
+  font-size: 11px;
+  color: var(--green);
+  font-weight: 700;
+  letter-spacing: 1px;
+  margin-bottom: 6px;
+}
+.action-side h3 {
+  font-size: 15px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+.action-side p {
+  font-size: 12px;
+  color: var(--gray-1);
+}
+
+.section-title {
+  font-size: 14px;
+  font-weight: 700;
+  margin: 32px 0 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.section-title .all-link {
+  font-size: 12px;
+  color: var(--green);
+  text-decoration: none;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.history-list {
+  background: var(--white);
+  border: 1px solid var(--gray-4);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.history-item {
+  display: grid;
+  grid-template-columns: 1fr auto auto auto;
+  gap: 16px;
+  align-items: center;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--gray-4);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.history-item:last-child { border-bottom: none; }
+.history-item:hover { background: var(--gray-5); }
+.history-name {
+  font-weight: 600;
+  font-size: 14px;
+}
+.history-meta {
+  font-size: 11px;
+  color: var(--gray-1);
+}
+.history-pages {
+  font-size: 12px;
+  color: var(--ink-soft);
+  font-weight: 600;
+}
+.history-status {
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 3px;
+  font-weight: 700;
+}
+.status-done { background: var(--green-light); color: var(--green); }
+.status-sent { background: #EEF2FF; color: #4F46E5; }
+.history-action {
+  color: var(--gray-1);
+  font-size: 16px;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-top: 12px;
+}
+.stat-card {
+  background: var(--white);
+  border: 1px solid var(--gray-4);
+  border-radius: 8px;
+  padding: 16px;
+}
+.stat-card .label {
+  font-size: 11px;
+  color: var(--gray-1);
+  margin-bottom: 6px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+.stat-card .value {
+  font-size: 20px;
+  font-weight: 700;
+}
+.stat-card .value .unit {
+  font-size: 12px;
+  color: var(--gray-1);
+  font-weight: 400;
+  margin-left: 4px;
+}
+
+/* ===== 화면 3: 교재 만들기 ===== */
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+.page-header h1 {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+}
+.btn-back {
+  background: none;
+  border: none;
+  color: var(--gray-1);
+  font-size: 13px;
+  cursor: pointer;
+  font-family: inherit;
+  padding: 6px 0;
+}
+.btn-back:hover { color: var(--ink); }
+
+.card {
+  background: var(--white);
+  border: 1px solid var(--gray-4);
+  border-radius: 10px;
+  padding: 24px;
+  margin-bottom: 14px;
+}
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 18px;
+}
+.card-step {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--green);
+  letter-spacing: 1.5px;
+  margin-bottom: 4px;
+}
+.card-title {
+  font-size: 16px;
+  font-weight: 700;
+}
+.card-hint {
+  font-size: 12px;
+  color: var(--gray-1);
+  font-weight: 400;
+  margin-left: 8px;
+}
+
+.field-row {
+  display: grid;
+  gap: 12px;
+}
+.field-row.cols-3 { grid-template-columns: 2fr 1fr 1fr; }
+.field-row.cols-4 { grid-template-columns: 2fr 1fr 1fr 1fr; }
+.field label {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--ink-soft);
+  margin-bottom: 6px;
+  letter-spacing: 0.5px;
+}
+.field input, .field select {
+  width: 100%;
+  padding: 10px 12px;
+  font-size: 14px;
+  border: 1px solid var(--gray-3);
+  border-radius: 6px;
+  background: var(--white);
+  font-family: inherit;
+}
+.field input:focus, .field select:focus {
+  outline: none;
+  border-color: var(--green);
+}
+
+/* 업로드 박스 */
+.uploads {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 12px;
+}
+.upload-box {
+  border: 2px dashed var(--gray-3);
+  border-radius: 8px;
+  padding: 22px 14px;
+  text-align: center;
+  background: #FAFAFA;
+  cursor: pointer;
+  transition: all 0.15s;
+  position: relative;
+}
+.upload-box:hover {
+  border-color: var(--green);
+  background: var(--green-light);
+}
+.upload-box.uploaded {
+  border-color: var(--green);
+  border-style: solid;
+  background: var(--green-light);
+}
+.upload-box .icon {
+  font-size: 28px;
+  color: var(--gray-2);
+  margin-bottom: 8px;
+  font-weight: 300;
+}
+.upload-box.uploaded .icon { color: var(--green); }
+.upload-box .label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--green);
+  letter-spacing: 1px;
+  margin-bottom: 4px;
+}
+.upload-box .subj {
+  font-size: 14px;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+.upload-box .filename {
+  font-size: 11px;
+  color: var(--gray-1);
+  word-break: break-all;
+  min-height: 14px;
+}
+.upload-box .uploaded-info {
+  font-size: 11px;
+  color: var(--green);
+  font-weight: 600;
+}
+
+/* 표지 선택 */
+.cover-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 8px;
+}
+.cover-item {
+  aspect-ratio: 0.71;
+  background: var(--gray-5);
+  border: 2px solid transparent;
+  border-radius: 6px;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 6px;
+  font-size: 10px;
+  color: var(--gray-1);
+  font-weight: 600;
+  background: linear-gradient(135deg, #f0f0f0 0%, #e5e5e5 100%);
+}
+.cover-item:hover { border-color: var(--gray-2); }
+.cover-item.selected {
+  border-color: var(--green);
+  box-shadow: 0 0 0 2px rgba(0, 98, 65, 0.15);
+}
+.cover-item.selected::after {
+  content: "✓";
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  background: var(--green);
+  color: var(--white);
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+/* 알림 */
+.alert {
+  padding: 12px 16px;
+  border-radius: 6px;
+  font-size: 13px;
+  margin-bottom: 14px;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+.alert.info {
+  background: var(--green-light);
+  color: var(--green-dark);
+  border: 1px solid #C5E0D2;
+}
+.alert.warn {
+  background: var(--warning-bg);
+  color: var(--warning);
+  border: 1px solid #FDE68A;
+}
+.alert .icon {
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+/* 빌드 버튼 */
+.build-bar {
+  background: var(--white);
+  border: 1px solid var(--gray-4);
+  border-radius: 10px;
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+.build-bar-text {
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+.build-bar-text strong {
+  color: var(--ink);
+  font-weight: 700;
+}
+.btn-build {
+  background: var(--green);
+  color: var(--white);
+  border: none;
+  padding: 12px 32px;
+  font-size: 14px;
+  font-weight: 700;
+  border-radius: 6px;
+  cursor: pointer;
+  font-family: inherit;
+  letter-spacing: 0.5px;
+}
+.btn-build:hover { background: var(--green-dark); }
+.btn-build:disabled { background: var(--gray-2); cursor: not-allowed; }
+
+/* 진행 상태 (모달) */
+.modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+.modal.active { display: flex; }
+.modal-content {
+  background: var(--white);
+  border-radius: 12px;
+  padding: 32px;
+  width: 460px;
+  max-width: 90%;
+}
+.modal-content h2 {
+  font-size: 17px;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+.modal-content p {
+  font-size: 13px;
+  color: var(--gray-1);
+  margin-bottom: 20px;
+}
+.progress-bar {
+  height: 6px;
+  background: var(--gray-5);
+  border-radius: 3px;
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+.progress-fill {
+  height: 100%;
+  background: var(--green);
+  width: 0%;
+  transition: width 0.4s;
+}
+.progress-detail {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--ink-soft);
+}
+.progress-text { font-weight: 600; }
+.progress-pct { color: var(--green); font-weight: 700; }
+
+/* ===== 화면 4: 디자인 설정 ===== */
+.settings-section {
+  margin-bottom: 24px;
+}
+.settings-section h3 {
+  font-size: 13px;
+  font-weight: 700;
+  margin-bottom: 14px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--gray-4);
+  letter-spacing: 0.3px;
+}
+.color-input-row {
+  display: grid;
+  grid-template-columns: 36px 1fr;
+  gap: 8px;
+  align-items: center;
+}
+.color-swatch {
+  width: 36px;
+  height: 36px;
+  border-radius: 6px;
+  border: 1px solid var(--gray-3);
+  cursor: pointer;
+}
+.toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--gray-4);
+}
+.toggle-row:last-child { border-bottom: none; }
+.toggle-row .label {
+  font-size: 13px;
+  font-weight: 600;
+}
+.toggle-row .desc {
+  font-size: 11px;
+  color: var(--gray-1);
+  margin-top: 2px;
+}
+.toggle {
+  position: relative;
+  width: 40px;
+  height: 22px;
+  background: var(--gray-3);
+  border-radius: 11px;
+  cursor: pointer;
+  transition: background 0.2s;
+  flex-shrink: 0;
+}
+.toggle::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 18px;
+  height: 18px;
+  background: var(--white);
+  border-radius: 50%;
+  transition: left 0.2s;
+}
+.toggle.on { background: var(--green); }
+.toggle.on::after { left: 20px; }
+
+.btn-secondary {
+  background: var(--white);
+  color: var(--ink-soft);
+  border: 1px solid var(--gray-3);
+  padding: 9px 16px;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 6px;
+  cursor: pointer;
+  font-family: inherit;
+}
+.btn-secondary:hover { border-color: var(--gray-1); }
+
+.settings-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-top: 24px;
+}
+
+/* ===== 화면 5: 결과 ===== */
+.result-card {
+  background: var(--white);
+  border: 1px solid var(--gray-4);
+  border-radius: 10px;
+  padding: 32px;
+  margin-bottom: 16px;
+}
+.result-success {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.result-icon {
+  width: 44px;
+  height: 44px;
+  background: var(--green);
+  color: var(--white);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  font-weight: 700;
+}
+.result-msg .label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--green);
+  letter-spacing: 1.5px;
+  margin-bottom: 2px;
+}
+.result-msg h2 {
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.result-info {
+  background: var(--gray-5);
+  border-radius: 8px;
+  padding: 16px 18px;
+  margin-bottom: 20px;
+}
+.result-info-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 6px 0;
+  font-size: 13px;
+}
+.result-info-row .key {
+  color: var(--gray-1);
+}
+.result-info-row .val {
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.result-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px;
+}
+.btn-action {
+  background: var(--white);
+  border: 1px solid var(--gray-3);
+  padding: 14px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  text-align: center;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  transition: all 0.15s;
+}
+.btn-action:hover {
+  border-color: var(--green);
+  color: var(--green);
+}
+.btn-action .ic {
+  font-size: 20px;
+  display: block;
+  margin-bottom: 4px;
+}
+.btn-action.primary {
+  background: var(--green);
+  border-color: var(--green);
+  color: var(--white);
+}
+.btn-action.primary:hover { background: var(--green-dark); }
+
+.preview-card {
+  background: var(--white);
+  border: 1px solid var(--gray-4);
+  border-radius: 10px;
+  padding: 24px;
+}
+.preview-card h3 {
+  font-size: 14px;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+.preview-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+.preview-page {
+  aspect-ratio: 0.71;
+  background: var(--gray-5);
+  border: 1px solid var(--gray-4);
+  border-radius: 4px;
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 6px;
+  font-size: 10px;
+  color: var(--gray-1);
+  font-weight: 600;
+}
+
+/* 이메일 모달 */
+.email-form .field { margin-bottom: 12px; }
+.email-form input, .email-form textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--gray-3);
+  border-radius: 6px;
+  font-size: 13px;
+  font-family: inherit;
+}
+.email-form textarea {
+  min-height: 80px;
+  resize: vertical;
+}
+.modal-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-top: 16px;
+}
+
+.kbd {
+  font-family: ui-monospace, monospace;
+  background: var(--gray-5);
+  border: 1px solid var(--gray-4);
+  border-bottom-width: 2px;
+  border-radius: 3px;
+  padding: 1px 6px;
+  font-size: 11px;
+}
+</style>
+</head>
+<body>
+
+<!-- ============================================================ -->
+<!-- 상단 네비게이션                                                -->
+<!-- ============================================================ -->
+<div class="topbar" id="topbar">
+  <div class="brand">
+    <span class="brand-badge">강안교육</span>
+    <span>교재 자동 편집</span>
+  </div>
+  <div class="topbar-right">
+    <button class="btn-secondary" onclick="goto('page-settings')">⚙ 디자인 설정</button>
+    <div class="user-info">
+      <div class="user-avatar">김</div>
+      <span>김지영</span>
+    </div>
+    <button class="btn-logout" onclick="goto('page-login')">로그아웃</button>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- 화면 1: 로그인                                                 -->
+<!-- ============================================================ -->
+<div class="page" id="page-login">
+  <div class="container">
+    <div class="login-logo">
+      <div class="badge">강안교육</div>
+      <h1>교재 자동 편집</h1>
+      <p>매주 강사 PDF 3개 → 단권 교재 자동 생성</p>
+    </div>
+    <div class="login-card">
+      <div class="field">
+        <label>이메일</label>
+        <input type="email" placeholder="user@gangan.kr" value="kim@gangan.kr" />
+      </div>
+      <div class="field">
+        <label>비밀번호</label>
+        <input type="password" value="••••••••" />
+      </div>
+      <button class="btn-primary" onclick="goto('page-main', true)">로그인</button>
+      <div class="login-footer">
+        계정 문의는 어드민에게 요청
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- 화면 2: 메인 (대시보드)                                         -->
+<!-- ============================================================ -->
+<div class="page" id="page-main">
+  <div class="container">
+    <h1 class="greeting">안녕하세요, 김지영님 👋</h1>
+    <p class="greeting-sub">오늘 만들 교재가 있나요?</p>
+
+    <div class="action-grid">
+      <div class="action-main" onclick="goto('page-build')">
+        <div class="label">▶ NEW</div>
+        <h2>새 교재 만들기</h2>
+        <p>강사 PDF 3개를 업로드해 단권 교재를 자동 생성합니다</p>
+        <div class="arrow">→</div>
+      </div>
+      <div class="action-side" onclick="alert('다음 세션에 추가될 페이지입니다')">
+        <div class="label">관리</div>
+        <h3>표지 / 강사 관리</h3>
+        <p>표지 등록, 강사 정보</p>
+      </div>
+    </div>
+
+    <div class="section-title">
+      <span>최근 작업</span>
+      <a class="all-link">전체 보기 →</a>
+    </div>
+
+    <div class="history-list">
+      <div class="history-item" onclick="goto('page-result')">
+        <div>
+          <div class="history-name">수매깨 7주차 · 난이도 Q</div>
+          <div class="history-meta">2025-04-26 · 김지영</div>
+        </div>
+        <div class="history-pages">127p</div>
+        <span class="history-status status-sent">발송완료</span>
+        <span class="history-action">→</span>
+      </div>
+      <div class="history-item">
+        <div>
+          <div class="history-name">수매깨 6주차 · 난이도 P</div>
+          <div class="history-meta">2025-04-19 · 김지영</div>
+        </div>
+        <div class="history-pages">125p</div>
+        <span class="history-status status-sent">발송완료</span>
+        <span class="history-action">→</span>
+      </div>
+      <div class="history-item">
+        <div>
+          <div class="history-name">수매깨 5주차 · 난이도 Q</div>
+          <div class="history-meta">2025-04-12 · 김지영</div>
+        </div>
+        <div class="history-pages">128p</div>
+        <span class="history-status status-sent">발송완료</span>
+        <span class="history-action">→</span>
+      </div>
+      <div class="history-item">
+        <div>
+          <div class="history-name">수매깨 4주차 · 난이도 R</div>
+          <div class="history-meta">2025-04-05 · 박정민</div>
+        </div>
+        <div class="history-pages">124p</div>
+        <span class="history-status status-done">생성완료</span>
+        <span class="history-action">→</span>
+      </div>
+      <div class="history-item">
+        <div>
+          <div class="history-name">수매깨 3주차 · 난이도 Q</div>
+          <div class="history-meta">2025-03-29 · 김지영</div>
+        </div>
+        <div class="history-pages">126p</div>
+        <span class="history-status status-sent">발송완료</span>
+        <span class="history-action">→</span>
+      </div>
+    </div>
+
+    <div class="section-title">이번 달 통계</div>
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="label">생성한 교재</div>
+        <div class="value">4<span class="unit">권</span></div>
+      </div>
+      <div class="stat-card">
+        <div class="label">총 페이지</div>
+        <div class="value">503<span class="unit">쪽</span></div>
+      </div>
+      <div class="stat-card">
+        <div class="label">평균 빌드 시간</div>
+        <div class="value">52<span class="unit">초</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- 화면 3: 교재 만들기                                             -->
+<!-- ============================================================ -->
+<div class="page" id="page-build">
+  <div class="container">
+    <div class="page-header">
+      <h1>새 교재 만들기</h1>
+      <button class="btn-back" onclick="goto('page-main')">← 메인으로</button>
+    </div>
+
+    <!-- STEP 1: 교재 정보 -->
+    <div class="card">
+      <div class="card-step">STEP 1</div>
+      <div class="card-title">교재 정보</div>
+      <div style="margin-top: 14px;">
+        <div class="field-row cols-4">
+          <div class="field">
+            <label>교재명</label>
+            <input type="text" value="수매깨" />
+          </div>
+          <div class="field">
+            <label>주차</label>
+            <input type="text" value="7" />
+          </div>
+          <div class="field">
+            <label>난이도</label>
+            <select>
+              <option>Q</option>
+              <option>P</option>
+              <option>R</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>발행일</label>
+            <input type="date" value="2025-04-26" />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 2: PDF 업로드 -->
+    <div class="card">
+      <div class="card-step">STEP 2</div>
+      <div class="card-title">강사 PDF 업로드 <span class="card-hint">3개 모두 필요</span></div>
+      <div style="margin-top: 14px;">
+        <div class="uploads">
+          <div class="upload-box uploaded" onclick="alert('파일 선택 (실제 작동은 다음 세션)')">
+            <div class="icon">✓</div>
+            <div class="label">공통</div>
+            <div class="subj">수학 II</div>
+            <div class="filename">수매깨_수2.pdf</div>
+            <div class="uploaded-info">25문제 · 4.8MB</div>
+          </div>
+          <div class="upload-box uploaded">
+            <div class="icon">✓</div>
+            <div class="label">선택</div>
+            <div class="subj">확률과 통계</div>
+            <div class="filename">수매깨_확통.pdf</div>
+            <div class="uploaded-info">25문제 · 6.7MB</div>
+          </div>
+          <div class="upload-box">
+            <div class="icon">+</div>
+            <div class="label">선택</div>
+            <div class="subj">미적분</div>
+            <div class="filename">파일 선택 또는 드래그</div>
+          </div>
+        </div>
+
+        <div class="alert info" style="margin-top: 12px;">
+          <span class="icon">ℹ</span>
+          <span>자동 검수 결과: <strong>해설 영역 정상</strong> · <strong>출처 정보 25개 감지됨</strong> (자동 삭제 예정)</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 3: 표지 선택 -->
+    <div class="card">
+      <div class="card-step">STEP 3</div>
+      <div class="card-title">표지 선택 <span class="card-hint">미리 등록된 표지 중 클릭</span></div>
+      <div style="margin-top: 14px;">
+        <div class="cover-grid">
+          <div class="cover-item selected">표지 A</div>
+          <div class="cover-item">표지 B</div>
+          <div class="cover-item">표지 C</div>
+          <div class="cover-item">표지 D</div>
+          <div class="cover-item">표지 E</div>
+          <div class="cover-item">표지 F</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 빌드 -->
+    <div class="build-bar">
+      <div class="build-bar-text">
+        준비 완료 · <strong>약 1분</strong> 소요 예상 · 결과 <strong>약 127페이지</strong>
+      </div>
+      <button class="btn-build" onclick="startBuild()">교재 만들기 <span class="kbd">Ctrl+Enter</span></button>
+    </div>
+  </div>
+</div>
+
+<!-- 진행 상태 모달 -->
+<div class="modal" id="modal-progress">
+  <div class="modal-content">
+    <h2>교재 생성 중...</h2>
+    <p>잠시만 기다려주세요. 페이지를 닫지 마세요.</p>
+    <div class="progress-bar">
+      <div class="progress-fill" id="progress-fill"></div>
+    </div>
+    <div class="progress-detail">
+      <span class="progress-text" id="progress-text">시작 중...</span>
+      <span class="progress-pct" id="progress-pct">0%</span>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- 화면 4: 디자인 설정                                             -->
+<!-- ============================================================ -->
+<div class="page" id="page-settings">
+  <div class="container">
+    <div class="page-header">
+      <h1>디자인 설정</h1>
+      <button class="btn-back" onclick="goto('page-main')">← 메인으로</button>
+    </div>
+
+    <div class="card">
+      <div class="alert info">
+        <span class="icon">ℹ</span>
+        <span>여기서 변경한 설정은 모든 직원에게 동일하게 적용됩니다. 한 번 설정 후 매주 그대로 유지됩니다.</span>
+      </div>
+
+      <div class="settings-section">
+        <h3>색상</h3>
+        <div class="field-row cols-3">
+          <div class="field">
+            <label>강조색 (메인 그린)</label>
+            <div class="color-input-row">
+              <div class="color-swatch" style="background:#006241"></div>
+              <input type="text" value="#006241" />
+            </div>
+          </div>
+          <div class="field">
+            <label>강조색 진한</label>
+            <div class="color-input-row">
+              <div class="color-swatch" style="background:#004F32"></div>
+              <input type="text" value="#004F32" />
+            </div>
+          </div>
+          <div class="field">
+            <label>본문 색</label>
+            <div class="color-input-row">
+              <div class="color-swatch" style="background:#1A1A1A"></div>
+              <input type="text" value="#1A1A1A" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <h3>크기 / 비율</h3>
+        <div class="field-row cols-4">
+          <div class="field">
+            <label>페이지 여백 (mm)</label>
+            <input type="text" value="18" />
+          </div>
+          <div class="field">
+            <label>문번 크기 (pt)</label>
+            <input type="text" value="19" />
+          </div>
+          <div class="field">
+            <label>본문 영역 비율</label>
+            <input type="text" value="0.55" />
+          </div>
+          <div class="field">
+            <label>최대 확대 배율</label>
+            <input type="text" value="1.5" />
+          </div>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <h3>콘텐츠 옵션</h3>
+        <div class="toggle-row">
+          <div>
+            <div class="label">출처 정보 자동 삭제</div>
+            <div class="desc">[2025년 3월 ...] 같은 출처 표시를 자동으로 가립니다</div>
+          </div>
+          <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+        </div>
+        <div class="toggle-row">
+          <div>
+            <div class="label">카테고리 라벨 표시</div>
+            <div class="desc">| 함수의 극대 ⋅ 극소 ... | 정답률 표시</div>
+          </div>
+          <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+        </div>
+        <div class="toggle-row">
+          <div>
+            <div class="label">정답률 표시</div>
+            <div class="desc">정답률 83% 등 표기 유지</div>
+          </div>
+          <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+        </div>
+        <div class="toggle-row">
+          <div>
+            <div class="label">풀이 영역 표시</div>
+            <div class="desc">문제 페이지 하단에 풀이 작성 공간</div>
+          </div>
+          <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+        </div>
+      </div>
+
+      <div class="settings-actions">
+        <button class="btn-secondary">기본값으로 초기화</button>
+        <button class="btn-secondary">취소</button>
+        <button class="btn-primary" style="width: auto; padding: 9px 24px;" onclick="goto('page-main')">저장</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- 화면 5: 결과                                                   -->
+<!-- ============================================================ -->
+<div class="page" id="page-result">
+  <div class="container">
+    <div class="page-header">
+      <h1>교재 생성 완료</h1>
+      <button class="btn-back" onclick="goto('page-main')">← 메인으로</button>
+    </div>
+
+    <div class="result-card">
+      <div class="result-success">
+        <div class="result-icon">✓</div>
+        <div class="result-msg">
+          <div class="label">완료</div>
+          <h2>수매깨_7주차_난이도Q.pdf</h2>
+        </div>
+      </div>
+
+      <div class="result-info">
+        <div class="result-info-row">
+          <span class="key">총 페이지</span>
+          <span class="val">127페이지 (5일치 통합)</span>
+        </div>
+        <div class="result-info-row">
+          <span class="key">파일 크기</span>
+          <span class="val">76.8 MB</span>
+        </div>
+        <div class="result-info-row">
+          <span class="key">빌드 시간</span>
+          <span class="val">53초</span>
+        </div>
+        <div class="result-info-row">
+          <span class="key">자동 검수</span>
+          <span class="val" style="color: var(--green);">✓ 모든 항목 정상</span>
+        </div>
+        <div class="result-info-row">
+          <span class="key">생성 시각</span>
+          <span class="val">2025-04-26 14:32</span>
+        </div>
+      </div>
+
+      <div class="result-actions">
+        <button class="btn-action primary" onclick="alert('PDF 다운로드 (실제 작동은 다음 세션)')">
+          <span class="ic">↓</span>
+          PDF 다운로드
+        </button>
+        <button class="btn-action" onclick="document.getElementById('modal-email').classList.add('active')">
+          <span class="ic">✉</span>
+          인쇄소로 이메일 전송
+        </button>
+        <button class="btn-action" onclick="alert('미리보기 (다음 세션)')">
+          <span class="ic">👁</span>
+          미리보기
+        </button>
+      </div>
+    </div>
+
+    <div class="preview-card">
+      <h3>주요 페이지 미리보기</h3>
+      <div class="preview-grid">
+        <div class="preview-page">DAY 1<br>인트로</div>
+        <div class="preview-page">문제 1번</div>
+        <div class="preview-page">DAY 3<br>인트로</div>
+        <div class="preview-page">DAY 5<br>해설</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 이메일 전송 모달 -->
+<div class="modal" id="modal-email">
+  <div class="modal-content">
+    <h2>인쇄소로 전송</h2>
+    <p>이메일 내용을 확인하고 전송하세요.</p>
+    <div class="email-form">
+      <div class="field">
+        <label>받는 사람</label>
+        <input type="email" value="print@hanjin-print.kr" />
+      </div>
+      <div class="field">
+        <label>제목</label>
+        <input type="text" value="[강안교육] 수매깨 7주차 난이도Q 인쇄 의뢰" />
+      </div>
+      <div class="field">
+        <label>본문</label>
+        <textarea>안녕하세요. 강안교육입니다.
+
+수매깨 7주차 난이도Q 교재 인쇄 의뢰드립니다.
+- 페이지: 127p
+- 수량: 30부
+- 납기: 4월 28일까지
+
+감사합니다.</textarea>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="document.getElementById('modal-email').classList.remove('active')">취소</button>
+      <button class="btn-primary" style="width: auto; padding: 9px 24px;"
+              onclick="alert('전송 완료 (다음 세션에 실제 작동)'); document.getElementById('modal-email').classList.remove('active')">
+        전송하기
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+// 페이지 전환
+function goto(pageId, hideTopbar) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById(pageId).classList.add('active');
+  document.getElementById('topbar').classList.toggle('hidden', pageId === 'page-login' || hideTopbar === false);
+  if (pageId === 'page-login') {
+    document.getElementById('topbar').classList.add('hidden');
+  } else {
+    document.getElementById('topbar').classList.remove('hidden');
+  }
+  window.scrollTo(0, 0);
+}
+
+// 시작은 로그인 화면
+goto('page-login');
+
+// 빌드 데모
+function startBuild() {
+  document.getElementById('modal-progress').classList.add('active');
+  const fill = document.getElementById('progress-fill');
+  const text = document.getElementById('progress-text');
+  const pct = document.getElementById('progress-pct');
+  
+  const steps = [
+    { p: 10, t: '폰트 등록 중...' },
+    { p: 25, t: '해설 위치 자동 검출 중...' },
+    { p: 40, t: '1~5일차 매핑 빌드 중...' },
+    { p: 60, t: '콘텐츠 영역 검출 중...' },
+    { p: 80, t: '디자인 PDF 생성 중...' },
+    { p: 95, t: '벡터 콘텐츠 임베드 중...' },
+    { p: 100, t: '완료!' },
+  ];
+  
+  let i = 0;
+  const tick = () => {
+    if (i >= steps.length) {
+      setTimeout(() => {
+        document.getElementById('modal-progress').classList.remove('active');
+        goto('page-result');
+      }, 500);
+      return;
+    }
+    fill.style.width = steps[i].p + '%';
+    text.textContent = steps[i].t;
+    pct.textContent = steps[i].p + '%';
+    i++;
+    setTimeout(tick, 600);
+  };
+  tick();
+}
+
+// 단축키
+document.addEventListener('keydown', (e) => {
+  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+    if (document.getElementById('page-build').classList.contains('active')) {
+      startBuild();
+    }
+  }
+});
+
+// 표지 선택
+document.querySelectorAll('.cover-item').forEach(item => {
+  item.addEventListener('click', () => {
+    document.querySelectorAll('.cover-item').forEach(i => i.classList.remove('selected'));
+    item.classList.add('selected');
+  });
+});
+
+// 모달 외부 클릭 시 닫기
+document.querySelectorAll('.modal').forEach(modal => {
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal && modal.id !== 'modal-progress') {
+      modal.classList.remove('active');
+    }
+  });
+});
+</script>
+
+</body>
+</html>
