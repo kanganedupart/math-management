@@ -885,6 +885,10 @@ body {
   font-size: 11px;
 }
 </style>
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-storage-compat.js"></script>
 </head>
 <body>
 
@@ -1355,6 +1359,23 @@ body {
 </div>
 
 <script>
+// ===== Firebase 연결 =====
+const firebaseConfig = {
+  apiKey: "AIzaSyBHMic5yrFMDMgDD2X-uUmEsVJajeS1Z_s",
+  authDomain: "math-kanganedu.firebaseapp.com",
+  projectId: "math-kanganedu",
+  storageBucket: "math-kanganedu.firebasestorage.app",
+  messagingSenderId: "895332425928",
+  appId: "1:895332425928:web:00a69e7aab75e3151ec5fd",
+  databaseURL: "https://math-kanganedu-default-rtdb.firebaseio.com"
+};
+firebase.initializeApp(firebaseConfig);
+window.__firebaseDb = firebase.database();
+window.__firebaseStorage = firebase.storage();
+window.__fbReady = true;
+console.log('Firebase 연결 완료');
+
+// ===== 페이지 전환 =====
 // 페이지 전환
 function goto(pageId, hideTopbar) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
